@@ -59,12 +59,24 @@ if (is.null(opt$annotation)) {
   stop("Sample annotation file is required. Use --annotation <file>")
 }
 
+# Helper function to read CSV or TSV based on file extension
+read_delimited <- function(file_path, ...) {
+  ext <- tolower(tools::file_ext(file_path))
+  if (ext %in% c("tsv", "txt", "tab")) {
+    cat(paste("  Detected tab-delimited format:", basename(file_path), "\n"))
+    return(read.delim(file_path, ...))
+  } else {
+    cat(paste("  Detected CSV format:", basename(file_path), "\n"))
+    return(read.csv(file_path, ...))
+  }
+}
+
 # Read input files
 cat("Reading expression matrix...\n")
-expr_matrix <- read.csv(opt$expression, row.names = 1, check.names = FALSE)
+expr_matrix <- read_delimited(opt$expression, row.names = 1, check.names = FALSE)
 
 cat("Reading sample annotations...\n")
-annotations <- read.csv(opt$annotation, check.names = FALSE)
+annotations <- read_delimited(opt$annotation, check.names = FALSE)
 
 # Identify sample ID column
 sample_col <- NULL
