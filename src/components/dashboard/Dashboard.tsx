@@ -3,12 +3,13 @@ import { ExpressionDataset } from "@/types/expression";
 import { demoDataset } from "@/data/demoData";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { ExpressionBoxPlot } from "@/components/charts/ExpressionBoxPlot";
+import { SampleBoxPlot } from "@/components/charts/SampleBoxPlot";
 import { ExpressionHeatmap } from "@/components/charts/ExpressionHeatmap";
 import { ExpressionHistogram } from "@/components/charts/ExpressionHistogram";
 import { ExpressionViolinPlot } from "@/components/charts/ExpressionViolinPlot";
 import { SummaryStats } from "@/components/charts/SummaryStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Grid3X3, Activity, CircleDot } from "lucide-react";
+import { BarChart3, Grid3X3, Activity, CircleDot, Users } from "lucide-react";
 
 export function Dashboard() {
   const [dataset, setDataset] = useState<ExpressionDataset>(demoDataset);
@@ -71,6 +72,10 @@ export function Dashboard() {
                 <CircleDot className="h-4 w-4" />
                 Strip Plot
               </TabsTrigger>
+              <TabsTrigger value="sample" className="gap-2">
+                <Users className="h-4 w-4" />
+                Per-Sample
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="boxplot" className="space-y-4">
@@ -120,6 +125,15 @@ export function Dashboard() {
                   />
                 ))}
               </div>
+            </TabsContent>
+            
+            <TabsContent value="sample">
+              <SampleBoxPlot
+                expressions={dataset.expressions}
+                selectedGenes={selectedGenes}
+                selectedGroups={selectedGroups}
+                groups={dataset.groups}
+              />
             </TabsContent>
           </Tabs>
           
