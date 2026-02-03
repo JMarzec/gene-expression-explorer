@@ -3,14 +3,12 @@ import { GeneExpression } from "@/types/expression";
 import { calculateBoxPlotStats } from "@/utils/statistics";
 import {
   ComposedChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ErrorBar,
-  Cell,
+  Scatter,
 } from "recharts";
 
 interface SampleBoxPlotProps {
@@ -29,6 +27,86 @@ const CHART_COLORS = [
   "hsl(25, 85%, 55%)",
   "hsl(45, 90%, 50%)",
 ];
+
+// Custom shape for horizontal box plot
+const HorizontalBoxPlotShape = (props: any) => {
+  const { cx, cy, payload } = props;
+  if (!payload || !cx || !cy) return null;
+  
+  const { q1, q3, median, min, max, color } = payload;
+  const xScale = props.xAxis;
+  
+  if (!xScale) return null;
+  
+  const boxHeight = 12;
+  const boxY = cy - boxHeight / 2;
+  
+  const x1 = xScale.scale(q1);
+  const x3 = xScale.scale(q3);
+  const xMedian = xScale.scale(median);
+  const xMin = xScale.scale(min);
+  const xMax = xScale.scale(max);
+  
+  const boxWidth = Math.abs(x3 - x1);
+  const boxX = Math.min(x1, x3);
+  
+  return (
+    <g>
+      {/* Whisker line from min to max */}
+      <line
+        x1={xMin}
+        y1={cy}
+        x2={xMax}
+        y2={cy}
+        stroke="hsl(var(--foreground))"
+        strokeWidth={1.5}
+      />
+      
+      {/* Min whisker cap */}
+      <line
+        x1={xMin}
+        y1={cy - boxHeight / 4}
+        x2={xMin}
+        y2={cy + boxHeight / 4}
+        stroke="hsl(var(--foreground))"
+        strokeWidth={1.5}
+      />
+      
+      {/* Max whisker cap */}
+      <line
+        x1={xMax}
+        y1={cy - boxHeight / 4}
+        x2={xMax}
+        y2={cy + boxHeight / 4}
+        stroke="hsl(var(--foreground))"
+        strokeWidth={1.5}
+      />
+      
+      {/* Box from Q1 to Q3 */}
+      <rect
+        x={boxX}
+        y={boxY}
+        width={boxWidth}
+        height={boxHeight}
+        fill={color}
+        fillOpacity={0.7}
+        stroke={color}
+        strokeWidth={2}
+        rx={2}
+      />
+      
+      {/* Median line */}
+      <line
+        x1={xMedian}
+        y1={boxY}
+        x2={xMedian}
+        y2={boxY + boxHeight}
+        stroke="hsl(var(--foreground))"
+        strokeWidth={2}
+      />
+    </g>
+  );
+};
 
 export function SampleBoxPlot({
   expressions,
@@ -85,7 +163,6 @@ export function SampleBoxPlot({
         q3: stats.q3,
         min: stats.min,
         max: stats.max,
-        whisker: [stats.min - stats.median, stats.max - stats.median],
         color: GROUP_COLORS[data.group],
         values: stats.values,
         n: data.values.length,
@@ -97,9 +174,15 @@ export function SampleBoxPlot({
       const groupCompare = groups.indexOf(a!.group) - groups.indexOf(b!.group);
       if (groupCompare !== 0) return groupCompare;
       return a!.sample.localeCompare(b!.sample);
-    });
+    }) as NonNullable<typeof chartData[number]>[];
 
-  const chartHeight = Math.max(300, chartData.length * 20);
+  const chartHeight = Math.max(300, chartData.length * 25);
+
+  // Calculate domain for X axis
+  const allValues = chartData.flatMap(d => [d.min, d.max]);
+  const xMin = Math.min(...allValues);
+  const xMax = Math.max(...allValues);
+  const xPadding = (xMax - xMin) * 0.1;
 
   return (
     <Card className="glass-panel animate-fade-in">
@@ -121,6 +204,7 @@ export function SampleBoxPlot({
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
               type="number"
+              domain={[xMin - xPadding, xMax + xPadding]}
               label={{
                 value: "Expression (log2)",
                 position: "bottom",
@@ -159,18 +243,11 @@ export function SampleBoxPlot({
                 return null;
               }}
             />
-            <Bar dataKey="median" barSize={12} radius={[0, 4, 4, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry!.color} fillOpacity={0.8} />
-              ))}
-              <ErrorBar
-                dataKey="whisker"
-                width={6}
-                strokeWidth={2}
-                stroke="hsl(var(--foreground))"
-                direction="x"
-              />
-            </Bar>
+            <Scatter
+              dataKey="median"
+              shape={<HorizontalBoxPlotShape />}
+              legendType="none"
+            />
           </ComposedChart>
         </ResponsiveContainer>
         

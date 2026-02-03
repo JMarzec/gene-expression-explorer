@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ExpressionDataset } from "@/types/expression";
 import { demoDataset } from "@/data/demoData";
 import { DashboardSidebar } from "./DashboardSidebar";
+import { ExportMenu } from "./ExportMenu";
 import { ExpressionBoxPlot } from "@/components/charts/ExpressionBoxPlot";
 import { SampleBoxPlot } from "@/components/charts/SampleBoxPlot";
 import { ExpressionHeatmap } from "@/components/charts/ExpressionHeatmap";
@@ -47,10 +48,21 @@ export function Dashboard() {
                 <p className="text-muted-foreground mt-1">{dataset.description}</p>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              {selectedGenes.map(gene => (
-                <span key={gene} className="gene-tag">{gene}</span>
-              ))}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {selectedGenes.slice(0, 5).map(gene => (
+                  <span key={gene} className="gene-tag">{gene}</span>
+                ))}
+                {selectedGenes.length > 5 && (
+                  <span className="text-muted-foreground text-sm">+{selectedGenes.length - 5} more</span>
+                )}
+              </div>
+              <ExportMenu
+                chartContainerId="chart-container"
+                dataset={dataset}
+                selectedGenes={selectedGenes}
+                selectedGroups={selectedGroups}
+              />
             </div>
           </header>
           
@@ -78,63 +90,65 @@ export function Dashboard() {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="boxplot" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {selectedExpressions.map(expr => (
-                  <ExpressionBoxPlot
-                    key={expr.gene}
-                    geneExpression={expr}
-                    groups={dataset.groups}
-                    selectedGroups={selectedGroups}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="heatmap">
-              <ExpressionHeatmap
-                expressions={dataset.expressions}
-                samples={dataset.samples}
-                selectedGenes={selectedGenes}
-                selectedGroups={selectedGroups}
-                groups={dataset.groups}
-              />
-            </TabsContent>
-            
-            <TabsContent value="histogram" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                {selectedExpressions.map(expr => (
-                  <ExpressionHistogram
-                    key={expr.gene}
-                    geneExpression={expr}
-                    groups={dataset.groups}
-                    selectedGroups={selectedGroups}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="strip" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {selectedExpressions.map(expr => (
-                  <ExpressionViolinPlot
-                    key={expr.gene}
-                    geneExpression={expr}
-                    groups={dataset.groups}
-                    selectedGroups={selectedGroups}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="sample">
-              <SampleBoxPlot
-                expressions={dataset.expressions}
-                selectedGenes={selectedGenes}
-                selectedGroups={selectedGroups}
-                groups={dataset.groups}
-              />
-            </TabsContent>
+            <div id="chart-container">
+              <TabsContent value="boxplot" className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {selectedExpressions.map(expr => (
+                    <ExpressionBoxPlot
+                      key={expr.gene}
+                      geneExpression={expr}
+                      groups={dataset.groups}
+                      selectedGroups={selectedGroups}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="heatmap">
+                <ExpressionHeatmap
+                  expressions={dataset.expressions}
+                  samples={dataset.samples}
+                  selectedGenes={selectedGenes}
+                  selectedGroups={selectedGroups}
+                  groups={dataset.groups}
+                />
+              </TabsContent>
+              
+              <TabsContent value="histogram" className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {selectedExpressions.map(expr => (
+                    <ExpressionHistogram
+                      key={expr.gene}
+                      geneExpression={expr}
+                      groups={dataset.groups}
+                      selectedGroups={selectedGroups}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="strip" className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {selectedExpressions.map(expr => (
+                    <ExpressionViolinPlot
+                      key={expr.gene}
+                      geneExpression={expr}
+                      groups={dataset.groups}
+                      selectedGroups={selectedGroups}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="sample">
+                <SampleBoxPlot
+                  expressions={dataset.expressions}
+                  selectedGenes={selectedGenes}
+                  selectedGroups={selectedGroups}
+                  groups={dataset.groups}
+                />
+              </TabsContent>
+            </div>
           </Tabs>
           
           <div className="grid gap-4 lg:grid-cols-3">

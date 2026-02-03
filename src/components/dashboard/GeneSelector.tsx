@@ -16,7 +16,7 @@ export function GeneSelector({
   genes,
   selectedGenes,
   onSelectionChange,
-  maxSelection = 10,
+  maxSelection = 20,
 }: GeneSelectorProps) {
   const [search, setSearch] = useState("");
   

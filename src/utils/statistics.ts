@@ -61,6 +61,18 @@ export function getMeanAndStd(values: number[]): { mean: number; std: number } {
   return { mean, std: Math.sqrt(variance) };
 }
 
+export function calculateMean(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+export function calculateStdDev(values: number[]): number {
+  if (values.length === 0) return 0;
+  const mean = calculateMean(values);
+  const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
+  return Math.sqrt(variance);
+}
+
 export function calculateCorrelation(x: number[], y: number[]): number {
   const n = x.length;
   const sumX = x.reduce((a, b) => a + b, 0);
