@@ -40,7 +40,7 @@ const BoxPlotShape = (props: any) => {
   
   if (!yScale) return null;
   
-  const boxWidth = Math.min(width * 0.6, 50);
+  const boxWidth = Math.min(width * 0.8, 70);
   const centerX = x + width / 2;
   const boxX = centerX - boxWidth / 2;
   

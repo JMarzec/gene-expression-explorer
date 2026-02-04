@@ -8,9 +8,10 @@ import { SampleBoxPlot } from "@/components/charts/SampleBoxPlot";
 import { ExpressionHeatmap } from "@/components/charts/ExpressionHeatmap";
 import { ExpressionHistogram } from "@/components/charts/ExpressionHistogram";
 import { ExpressionViolinPlot } from "@/components/charts/ExpressionViolinPlot";
+import { GeneCorrelationPlot } from "@/components/charts/GeneCorrelationPlot";
 import { SummaryStats } from "@/components/charts/SummaryStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Grid3X3, Activity, CircleDot, Users } from "lucide-react";
+import { BarChart3, Grid3X3, Activity, CircleDot, Users, TrendingUp } from "lucide-react";
 
 export function Dashboard() {
   const [dataset, setDataset] = useState<ExpressionDataset>(demoDataset);
@@ -88,6 +89,10 @@ export function Dashboard() {
                 <Users className="h-4 w-4" />
                 Per-Sample
               </TabsTrigger>
+              <TabsTrigger value="correlation" className="gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Correlation
+              </TabsTrigger>
             </TabsList>
             
             <div id="chart-container">
@@ -142,6 +147,15 @@ export function Dashboard() {
               
               <TabsContent value="sample">
                 <SampleBoxPlot
+                  expressions={dataset.expressions}
+                  selectedGenes={selectedGenes}
+                  selectedGroups={selectedGroups}
+                  groups={dataset.groups}
+                />
+              </TabsContent>
+
+              <TabsContent value="correlation">
+                <GeneCorrelationPlot
                   expressions={dataset.expressions}
                   selectedGenes={selectedGenes}
                   selectedGroups={selectedGroups}

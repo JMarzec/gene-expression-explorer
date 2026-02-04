@@ -12,14 +12,14 @@ interface ExpressionHeatmapProps {
   groups: string[];
 }
 
-const GROUP_COLORS: Record<string, string> = {
-  0: "hsl(200, 80%, 50%)",
-  1: "hsl(340, 75%, 55%)",
-  2: "hsl(165, 60%, 45%)",
-  3: "hsl(280, 60%, 55%)",
-  4: "hsl(25, 85%, 55%)",
-  5: "hsl(45, 90%, 50%)",
-};
+const CHART_COLORS = [
+  "hsl(200, 80%, 50%)",
+  "hsl(340, 75%, 55%)",
+  "hsl(165, 60%, 45%)",
+  "hsl(280, 60%, 55%)",
+  "hsl(25, 85%, 55%)",
+  "hsl(45, 90%, 50%)",
+];
 
 function getHeatmapColor(zScore: number): string {
   // Blue (low) -> White (mid) -> Red (high)
@@ -50,16 +50,14 @@ export function ExpressionHeatmap({
   selectedGroups,
   groups,
 }: ExpressionHeatmapProps) {
+  const sortedSamples = useMemo(() => {
+    return samples
+      .filter(s => selectedGroups.includes(s.group))
+      .sort((a, b) => groups.indexOf(a.group) - groups.indexOf(b.group));
+  }, [samples, selectedGroups, groups]);
+
   const heatmapData = useMemo(() => {
     const filteredExpressions = expressions.filter(e => selectedGenes.includes(e.gene));
-    const filteredSamples = samples.filter(s => selectedGroups.includes(s.group));
-    
-    // Sort samples by group
-    const sortedSamples = [...filteredSamples].sort((a, b) => {
-      const groupIndexA = groups.indexOf(a.group);
-      const groupIndexB = groups.indexOf(b.group);
-      return groupIndexA - groupIndexB;
-    });
     
     return filteredExpressions.map(expr => {
       const allValues = expr.samples.map(s => s.value);
@@ -81,13 +79,16 @@ export function ExpressionHeatmap({
       
       return { gene: expr.gene, cells };
     });
-  }, [expressions, samples, selectedGenes, selectedGroups, groups]);
-  
-  const sortedSamples = useMemo(() => {
-    return samples
-      .filter(s => selectedGroups.includes(s.group))
-      .sort((a, b) => groups.indexOf(a.group) - groups.indexOf(b.group));
-  }, [samples, selectedGroups, groups]);
+  }, [expressions, sortedSamples, selectedGenes]);
+
+  // Group color mapping
+  const groupColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    groups.forEach((group, index) => {
+      map[group] = CHART_COLORS[index % CHART_COLORS.length];
+    });
+    return map;
+  }, [groups]);
 
   if (selectedGenes.length === 0) {
     return (
@@ -112,9 +113,9 @@ export function ExpressionHeatmap({
       <CardContent>
         <div className="overflow-x-auto">
           <div className="min-w-fit">
-            {/* Group header */}
+            {/* Group text header */}
             <div className="flex mb-1 ml-20">
-              {selectedGroups.map((group, groupIdx) => {
+              {selectedGroups.map((group) => {
                 const groupSampleCount = sortedSamples.filter(s => s.group === group).length;
                 return (
                   <div
@@ -122,13 +123,31 @@ export function ExpressionHeatmap({
                     className="text-xs font-medium text-center truncate px-1"
                     style={{
                       width: `${groupSampleCount * 12}px`,
-                      color: GROUP_COLORS[groups.indexOf(group) % 6],
+                      color: groupColorMap[group],
                     }}
                   >
                     {group}
                   </div>
                 );
               })}
+            </div>
+
+            {/* Sample annotation bar */}
+            <div className="flex mb-0.5 ml-20">
+              {sortedSamples.map((sample) => (
+                <Tooltip key={`annot-${sample.sampleId}`}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="w-3 h-3 cursor-pointer"
+                      style={{ backgroundColor: groupColorMap[sample.group] }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    <p className="font-semibold">{sample.sampleId}</p>
+                    <p>Group: {sample.group}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
             </div>
             
             {/* Heatmap grid */}
@@ -139,7 +158,7 @@ export function ExpressionHeatmap({
                     {gene}
                   </div>
                   <div className="flex">
-                    {cells.map((cell, idx) => (
+                    {cells.map((cell) => (
                       <Tooltip key={`${gene}-${cell.sampleId}`}>
                         <TooltipTrigger asChild>
                           <div
@@ -161,19 +180,36 @@ export function ExpressionHeatmap({
               ))}
             </div>
             
-            {/* Legend */}
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <span className="text-xs text-muted-foreground">Low</span>
-              <div className="flex h-4 w-32 rounded overflow-hidden">
-                {Array.from({ length: 20 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex-1"
-                    style={{ backgroundColor: getHeatmapColor(-3 + (i * 6 / 19)) }}
-                  />
+            {/* Legends */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-4">
+              {/* Z-score legend */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Low</span>
+                <div className="flex h-4 w-32 rounded overflow-hidden">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex-1"
+                      style={{ backgroundColor: getHeatmapColor(-3 + (i * 6 / 19)) }}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground">High</span>
+              </div>
+
+              {/* Group legend */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">Groups:</span>
+                {selectedGroups.map(group => (
+                  <div key={group} className="flex items-center gap-1.5">
+                    <div
+                      className="w-3 h-3 rounded-sm"
+                      style={{ backgroundColor: groupColorMap[group] }}
+                    />
+                    <span className="text-xs text-muted-foreground">{group}</span>
+                  </div>
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground">High</span>
             </div>
           </div>
         </div>
