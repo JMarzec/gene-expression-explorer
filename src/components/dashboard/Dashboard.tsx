@@ -9,9 +9,11 @@ import { ExpressionHeatmap } from "@/components/charts/ExpressionHeatmap";
 import { ExpressionHistogram } from "@/components/charts/ExpressionHistogram";
 import { ExpressionViolinPlot } from "@/components/charts/ExpressionViolinPlot";
 import { GeneCorrelationPlot } from "@/components/charts/GeneCorrelationPlot";
+import { CorrelationMatrix } from "@/components/charts/CorrelationMatrix";
+import { DifferentialExpression } from "@/components/charts/DifferentialExpression";
 import { SummaryStats } from "@/components/charts/SummaryStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Grid3X3, Activity, CircleDot, Users, TrendingUp } from "lucide-react";
+import { BarChart3, Grid3X3, Activity, CircleDot, Users, TrendingUp, FlaskConical } from "lucide-react";
 
 export function Dashboard() {
   const [dataset, setDataset] = useState<ExpressionDataset>(demoDataset);
@@ -93,6 +95,10 @@ export function Dashboard() {
                 <TrendingUp className="h-4 w-4" />
                 Correlation
               </TabsTrigger>
+              <TabsTrigger value="diffexp" className="gap-2">
+                <FlaskConical className="h-4 w-4" />
+                Diff. Expr.
+              </TabsTrigger>
             </TabsList>
             
             <div id="chart-container">
@@ -154,8 +160,22 @@ export function Dashboard() {
                 />
               </TabsContent>
 
-              <TabsContent value="correlation">
+              <TabsContent value="correlation" className="space-y-4">
+                <CorrelationMatrix
+                  expressions={dataset.expressions}
+                  selectedGenes={selectedGenes}
+                  selectedGroups={selectedGroups}
+                />
                 <GeneCorrelationPlot
+                  expressions={dataset.expressions}
+                  selectedGenes={selectedGenes}
+                  selectedGroups={selectedGroups}
+                  groups={dataset.groups}
+                />
+              </TabsContent>
+
+              <TabsContent value="diffexp">
+                <DifferentialExpression
                   expressions={dataset.expressions}
                   selectedGenes={selectedGenes}
                   selectedGroups={selectedGroups}

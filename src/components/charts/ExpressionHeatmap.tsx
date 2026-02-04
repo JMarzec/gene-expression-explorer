@@ -114,7 +114,7 @@ export function ExpressionHeatmap({
         <div className="overflow-x-auto">
           <div className="min-w-fit">
             {/* Group text header */}
-            <div className="flex mb-1 ml-20">
+            <div className="flex mb-1" style={{ marginLeft: "68px" }}>
               {selectedGroups.map((group) => {
                 const groupSampleCount = sortedSamples.filter(s => s.group === group).length;
                 return (
@@ -133,12 +133,12 @@ export function ExpressionHeatmap({
             </div>
 
             {/* Sample annotation bar */}
-            <div className="flex mb-0.5 ml-20">
+            <div className="flex mb-0.5" style={{ marginLeft: "68px" }}>
               {sortedSamples.map((sample) => (
                 <Tooltip key={`annot-${sample.sampleId}`}>
                   <TooltipTrigger asChild>
                     <div
-                      className="w-3 h-3 cursor-pointer"
+                      className="w-3 h-3 cursor-pointer flex-shrink-0"
                       style={{ backgroundColor: groupColorMap[sample.group] }}
                     />
                   </TooltipTrigger>
