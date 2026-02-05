@@ -79,7 +79,7 @@ export function DatasetManager({
       
       {/* Loaded datasets */}
       {datasets.length > 0 && (
-        <ScrollArea className="max-h-32">
+        <ScrollArea className="max-h-48">
           <div className="space-y-2">
             {datasets.map((dataset, index) => (
               <div
