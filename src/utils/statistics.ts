@@ -73,6 +73,22 @@ export function calculateStdDev(values: number[]): number {
   return Math.sqrt(variance);
 }
 
+export function calculateMedian(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  return calculateQuantile(sorted, 0.5);
+}
+
+export function calculateMin(values: number[]): number {
+  if (values.length === 0) return 0;
+  return Math.min(...values);
+}
+
+export function calculateMax(values: number[]): number {
+  if (values.length === 0) return 0;
+  return Math.max(...values);
+}
+
 export function calculateCorrelation(x: number[], y: number[]): number {
   const n = x.length;
   const sumX = x.reduce((a, b) => a + b, 0);

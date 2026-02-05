@@ -5,8 +5,9 @@ import { DashboardSidebar } from "./DashboardSidebar";
 import { ExportMenu } from "./ExportMenu";
 import { ComparisonPanel } from "./ComparisonPanel";
 import { SummaryStats } from "@/components/charts/SummaryStats";
+import { ComparisonSummaryStats } from "@/components/charts/ComparisonSummaryStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Grid3X3, Activity, CircleDot, Users, TrendingUp, FlaskConical, Layers } from "lucide-react";
+import { BarChart3, Grid3X3, Activity, CircleDot, Users, TrendingUp, FlaskConical, Layers, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export function Dashboard() {
@@ -16,13 +17,22 @@ export function Dashboard() {
   const [activeTab, setActiveTab] = useState("boxplot");
 
   const handleAddDataset = useCallback((data: ExpressionDataset) => {
-    setDatasets(prev => [...prev, data]);
-    // Add new groups to selection
+    setDatasets(prev => {
+      // Remove demo dataset if it exists and this is the first user upload
+      const isFirstUserUpload = prev.length === 1 && prev[0].name === "Cancer Gene Expression Study";
+      const baseDatastes = isFirstUserUpload ? [] : prev;
+      return [...baseDatastes, data];
+    });
+    // Add new groups to selection (or replace if removing demo)
     setSelectedGroups(prev => {
+      const isFirstUserUpload = datasets.length === 1 && datasets[0].name === "Cancer Gene Expression Study";
+      if (isFirstUserUpload) {
+        return data.groups;
+      }
       const newGroups = data.groups.filter(g => !prev.includes(g));
       return [...prev, ...newGroups];
     });
-  }, []);
+  }, [datasets]);
 
   const handleRemoveDataset = useCallback((index: number) => {
     setDatasets(prev => prev.filter((_, i) => i !== index));
@@ -112,6 +122,10 @@ export function Dashboard() {
                 <FlaskConical className="h-4 w-4" />
                 Diff. Expr.
               </TabsTrigger>
+              <TabsTrigger value="volcano" className="gap-2">
+                <Flame className="h-4 w-4" />
+                Volcano
+              </TabsTrigger>
             </TabsList>
             
             {/* Comparison panels or single view */}
@@ -129,8 +143,14 @@ export function Dashboard() {
             </div>
           </Tabs>
           
-          {/* Summary stats for primary dataset */}
-          {!isComparisonMode && (
+          {/* Summary stats - comparison mode gets aggregated view */}
+          {isComparisonMode ? (
+            <ComparisonSummaryStats
+              datasets={datasets}
+              selectedGenes={selectedGenes}
+              selectedGroups={selectedGroups}
+            />
+          ) : (
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="lg:col-span-3">
                 <h3 className="text-lg font-semibold mb-3">Summary Statistics</h3>
