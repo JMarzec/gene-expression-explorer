@@ -86,6 +86,7 @@ export function Dashboard() {
               <ExportMenu
                 chartContainerId="chart-container-0"
                 dataset={primaryDataset}
+                datasets={datasets}
                 selectedGenes={selectedGenes}
                 selectedGroups={selectedGroups}
               />
