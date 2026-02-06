@@ -213,6 +213,66 @@ export function ComparisonSummaryStats({
           </div>
         )}
         
+        {/* Per-Dataset Gene Rankings */}
+        {selectedGenes.length > 0 && summaries.length > 1 && (
+          <div>
+            <h4 className="font-medium text-sm mb-3">Top Genes by Dataset</h4>
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+              {summaries.map((summary, idx) => {
+                const sortedByMean = [...summary.geneStats].sort((a, b) => b.mean - a.mean);
+                const topThree = sortedByMean.slice(0, 3);
+                const bottomThree = sortedByMean.slice(-3).reverse();
+                
+                return (
+                  <div key={`${summary.name}-genes-${idx}`} className="bg-muted/30 rounded-lg p-4">
+                    <h5 className="font-medium text-xs truncate mb-3" title={summary.name}>
+                      {summary.name}
+                    </h5>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <TrendingUp className="h-3 w-3 text-primary" />
+                          <span className="text-xs text-muted-foreground">Highest</span>
+                        </div>
+                        <div className="space-y-1">
+                          {topThree.map((stat, i) => (
+                            <div key={stat.gene} className="flex items-center justify-between text-xs">
+                              <span className="flex items-center gap-1">
+                                <span className="text-muted-foreground w-3">{i + 1}.</span>
+                                <span className="gene-tag text-xs">{stat.gene}</span>
+                              </span>
+                              <span className="font-mono text-primary">{stat.mean.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <TrendingDown className="h-3 w-3 text-destructive" />
+                          <span className="text-xs text-muted-foreground">Lowest</span>
+                        </div>
+                        <div className="space-y-1">
+                          {bottomThree.map((stat, i) => (
+                            <div key={stat.gene} className="flex items-center justify-between text-xs">
+                              <span className="flex items-center gap-1">
+                                <span className="text-muted-foreground w-3">{i + 1}.</span>
+                                <span className="gene-tag text-xs">{stat.gene}</span>
+                              </span>
+                              <span className="font-mono text-destructive">{stat.mean.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
         {/* Per-Gene Comparison Table */}
         {selectedGenes.length > 0 && summaries.length > 1 && (
           <div>

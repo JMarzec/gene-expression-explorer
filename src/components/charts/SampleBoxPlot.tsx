@@ -205,6 +205,7 @@ export function SampleBoxPlot({
             <XAxis
               type="number"
               domain={[xMin - xPadding, xMax + xPadding]}
+              tickFormatter={(value) => value.toFixed(1)}
               label={{
                 value: "Expression (log2)",
                 position: "bottom",
