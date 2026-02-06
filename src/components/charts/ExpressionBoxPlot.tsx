@@ -160,6 +160,7 @@ export function ExpressionBoxPlot({
             />
             <YAxis
               domain={[yMin - yPadding, yMax + yPadding]}
+              tickFormatter={(value) => value.toFixed(1)}
               label={{ 
                 value: "Expression (log2)", 
                 angle: -90, 
