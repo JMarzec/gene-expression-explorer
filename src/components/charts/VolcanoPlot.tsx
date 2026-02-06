@@ -13,8 +13,10 @@ import {
   ReferenceLine,
   Cell,
   Label,
+  LabelList,
 } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 interface VolcanoPlotProps {
   expressions: GeneExpression[];
@@ -162,6 +164,7 @@ export function VolcanoPlot({
 }: VolcanoPlotProps) {
   const [group1, setGroup1] = useState<string>(selectedGroups[0] || "");
   const [group2, setGroup2] = useState<string>(selectedGroups[1] || "");
+  const [showLabels, setShowLabels] = useState(true);
 
   // Update group selections when selectedGroups changes
   useMemo(() => {
@@ -206,6 +209,16 @@ export function VolcanoPlot({
     
     return data;
   }, [expressions, selectedGenes, group1, group2]);
+
+  // Get top significant genes for labeling
+  const labeledPoints = useMemo(() => {
+    if (!showLabels) return [];
+    const significant = volcanoData.filter(d => d.significant);
+    // Sort by -log10(p) and take top 10
+    return significant
+      .sort((a, b) => b.negLogPValue - a.negLogPValue)
+      .slice(0, 10);
+  }, [volcanoData, showLabels]);
 
   if (selectedGroups.length < 2) {
     return (
@@ -269,32 +282,44 @@ export function VolcanoPlot({
   return (
     <Card className="glass-panel animate-fade-in">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-lg font-semibold">
             Volcano Plot
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Select value={group1} onValueChange={setGroup1}>
-              <SelectTrigger className="w-[140px] h-8">
-                <SelectValue placeholder="Group 1" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedGroups.map(g => (
-                  <SelectItem key={g} value={g} disabled={g === group2}>{g}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-muted-foreground text-sm">vs</span>
-            <Select value={group2} onValueChange={setGroup2}>
-              <SelectTrigger className="w-[140px] h-8">
-                <SelectValue placeholder="Group 2" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedGroups.map(g => (
-                  <SelectItem key={g} value={g} disabled={g === group1}>{g}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="show-labels"
+                checked={showLabels}
+                onCheckedChange={setShowLabels}
+              />
+              <label htmlFor="show-labels" className="text-xs text-muted-foreground cursor-pointer">
+                Show labels
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={group1} onValueChange={setGroup1}>
+                <SelectTrigger className="w-[140px] h-8">
+                  <SelectValue placeholder="Group 1" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedGroups.map(g => (
+                    <SelectItem key={g} value={g} disabled={g === group2}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-muted-foreground text-sm">vs</span>
+              <Select value={group2} onValueChange={setGroup2}>
+                <SelectTrigger className="w-[140px] h-8">
+                  <SelectValue placeholder="Group 2" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedGroups.map(g => (
+                    <SelectItem key={g} value={g} disabled={g === group1}>{g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -356,6 +381,15 @@ export function VolcanoPlot({
               {volcanoData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getPointColor(entry)} />
               ))}
+              {showLabels && (
+                <LabelList
+                  dataKey="gene"
+                  position="top"
+                  offset={8}
+                  style={{ fontSize: 10, fill: "hsl(var(--foreground))" }}
+                  formatter={(value: string) => labeledPoints.some(p => p.gene === value) ? value : ""}
+                />
+              )}
             </Scatter>
           </ScatterChart>
         </ResponsiveContainer>

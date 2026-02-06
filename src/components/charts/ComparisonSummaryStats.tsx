@@ -4,6 +4,7 @@ import { ExpressionDataset } from "@/types/expression";
 import { calculateMean, calculateMedian, calculateStdDev, calculateMin, calculateMax } from "@/utils/statistics";
 import { useMemo, useState } from "react";
 import { Database, TrendingUp, TrendingDown, BarChart3, ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 type SortColumn = "gene" | "delta" | number;
 type SortDirection = "asc" | "desc";
@@ -113,6 +114,7 @@ export function ComparisonSummaryStats({
 
   const [sortColumn, setSortColumn] = useState<SortColumn>("gene");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [showAllGenes, setShowAllGenes] = useState(false);
 
   // Build sorted gene data for the comparison table
   const sortedGeneData = useMemo(() => {
@@ -368,24 +370,38 @@ export function ComparisonSummaryStats({
         {/* Per-Gene Comparison Table */}
         {selectedGenes.length > 0 && summaries.length > 1 && (
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h4 className="font-medium text-sm">Per-Gene Mean Expression Across Datasets</h4>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportCsv}
-                className="h-7 text-xs gap-1"
-              >
-                <Download className="h-3 w-3" />
-                Export CSV
-              </Button>
+              <div className="flex items-center gap-4">
+                {selectedGenes.length > 10 && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="show-all-genes"
+                      checked={showAllGenes}
+                      onCheckedChange={setShowAllGenes}
+                    />
+                    <label htmlFor="show-all-genes" className="text-xs text-muted-foreground cursor-pointer">
+                      Show all ({selectedGenes.length})
+                    </label>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportCsv}
+                  className="h-7 text-xs gap-1"
+                >
+                  <Download className="h-3 w-3" />
+                  Export CSV
+                </Button>
+              </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="sticky top-0 bg-card">
                   <tr className="border-b border-border">
                     <th 
-                      className="text-left py-2 px-3 font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                      className="text-left py-2 px-3 font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors bg-card"
                       onClick={() => handleSort("gene")}
                     >
                       <span className="flex items-center">
@@ -396,7 +412,7 @@ export function ComparisonSummaryStats({
                     {summaries.map((summary, idx) => (
                       <th 
                         key={idx} 
-                        className="text-right py-2 px-3 font-semibold text-muted-foreground truncate max-w-[120px] cursor-pointer hover:text-foreground transition-colors" 
+                        className="text-right py-2 px-3 font-semibold text-muted-foreground truncate max-w-[120px] cursor-pointer hover:text-foreground transition-colors bg-card" 
                         title={summary.name}
                         onClick={() => handleSort(idx)}
                       >
@@ -407,7 +423,7 @@ export function ComparisonSummaryStats({
                       </th>
                     ))}
                     <th 
-                      className="text-right py-2 px-3 font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                      className="text-right py-2 px-3 font-semibold text-muted-foreground cursor-pointer hover:text-foreground transition-colors bg-card"
                       onClick={() => handleSort("delta")}
                     >
                       <span className="flex items-center justify-end">
@@ -418,7 +434,7 @@ export function ComparisonSummaryStats({
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedGeneData.slice(0, 10).map(({ gene, means, maxDiff }) => (
+                  {(showAllGenes ? sortedGeneData : sortedGeneData.slice(0, 10)).map(({ gene, means, maxDiff }) => (
                     <tr key={gene} className="border-b border-border/50">
                       <td className="py-2 px-3">
                         <span className="gene-tag text-xs">{gene}</span>
@@ -435,7 +451,7 @@ export function ComparisonSummaryStats({
                   ))}
                 </tbody>
               </table>
-              {selectedGenes.length > 10 && (
+              {selectedGenes.length > 10 && !showAllGenes && (
                 <p className="text-xs text-muted-foreground mt-2">
                   Showing top 10 of {selectedGenes.length} selected genes
                 </p>
