@@ -1,4 +1,4 @@
-# GeneViz — Gene Expression Explorer
+# Gene Expression Explorer
 
 An interactive, browser-based dashboard for visualizing and comparing gene expression datasets. Upload your data as JSON files, explore expression patterns across samples and groups, and export publication-ready figures and statistics.
 
