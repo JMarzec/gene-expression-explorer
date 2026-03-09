@@ -1,6 +1,6 @@
 # Gene Expression Data Processing Scripts
 
-This folder contains R scripts for converting expression data into JSON format for the GeneViz dashboard.
+This folder contains R scripts for converting expression data into JSON format for the Gene Expression Explorer dashboard.
 
 ## expression_to_json.R
 
