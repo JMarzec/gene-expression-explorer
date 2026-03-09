@@ -51,8 +51,8 @@ export function DashboardSidebar({
             <Dna className="h-5 w-5 text-sidebar-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">GeneViz</h1>
-            <p className="text-xs text-sidebar-foreground/60">Expression Explorer</p>
+            <h1 className="text-lg font-bold text-sidebar-foreground">Gene Expression</h1>
+            <p className="text-xs text-sidebar-foreground/60">Explorer</p>
           </div>
         </div>
       </div>
