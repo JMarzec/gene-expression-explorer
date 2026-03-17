@@ -265,6 +265,39 @@ export function ExportMenu({
     </table>
   </div>
   
+  ${boxPlotData.length > 0 ? `
+  <div class="section">
+    <h2>Gene Box Plot Statistics</h2>
+    <p style="color: var(--muted); margin-bottom: 1rem;">Relative expression distribution across selected genes (all selected groups combined)</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Gene</th>
+          <th>Min</th>
+          <th>Q1</th>
+          <th>Median</th>
+          <th>Q3</th>
+          <th>Max</th>
+          <th>N</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${boxPlotData.map(row => `
+          <tr>
+            <td><span class="gene-tag">${row.gene}</span></td>
+            <td>${row.min.toFixed(3)}</td>
+            <td>${row.q1.toFixed(3)}</td>
+            <td><strong>${row.median.toFixed(3)}</strong></td>
+            <td>${row.q3.toFixed(3)}</td>
+            <td>${row.max.toFixed(3)}</td>
+            <td>${row.n}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+  ` : ''}
+
   <div class="section">
     <h2>Sample Groups</h2>
     <table>
