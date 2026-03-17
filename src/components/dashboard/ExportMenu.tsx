@@ -113,6 +113,22 @@ export function ExportMenu({
     return summaryRows;
   };
 
+  const generateGeneBoxPlotData = (ds: ExpressionDataset) => {
+    const availableGenes = selectedGenes.filter(g => ds.genes.includes(g));
+    const availableGroups = selectedGroups.filter(g => ds.groups.includes(g));
+
+    return availableGenes.map(gene => {
+      const expr = ds.expressions.find(e => e.gene === gene);
+      if (!expr) return null;
+      const values = expr.samples
+        .filter(s => availableGroups.includes(s.group))
+        .map(s => s.value);
+      if (values.length === 0) return null;
+      const stats = calculateBoxPlotStats(values);
+      return { gene, ...stats, n: values.length };
+    }).filter(Boolean) as { gene: string; min: number; q1: number; median: number; q3: number; max: number; n: number }[];
+  };
+
   const exportAsHtml = () => {
     const summaryData = generateSummaryData(dataset);
     
