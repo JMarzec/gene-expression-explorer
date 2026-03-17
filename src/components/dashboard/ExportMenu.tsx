@@ -336,6 +336,7 @@ export function ExportMenu({
 
   const exportAsPdf = async () => {
     const summaryData = generateSummaryData(dataset);
+    const boxPlotData = generateGeneBoxPlotData(dataset);
     
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
