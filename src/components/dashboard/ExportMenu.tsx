@@ -131,6 +131,7 @@ export function ExportMenu({
 
   const exportAsHtml = () => {
     const summaryData = generateSummaryData(dataset);
+    const boxPlotData = generateGeneBoxPlotData(dataset);
     
     const htmlContent = `
 <!DOCTYPE html>
