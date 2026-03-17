@@ -8,6 +8,7 @@ import { GeneCorrelationPlot } from "@/components/charts/GeneCorrelationPlot";
 import { CorrelationMatrix } from "@/components/charts/CorrelationMatrix";
 import { DifferentialExpression } from "@/components/charts/DifferentialExpression";
 import { VolcanoPlot } from "@/components/charts/VolcanoPlot";
+import { GeneBoxPlot } from "@/components/charts/GeneBoxPlot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database } from "lucide-react";
 
