@@ -14,6 +14,176 @@ import { ExpressionDataset } from "@/types/expression";
 import { calculateMean, calculateStdDev, calculateBoxPlotStats } from "@/utils/statistics";
 import { toast } from "sonner";
 
+const BOXPLOT_COLORS = [
+  "#38bdf8", "#f472b6", "#34d399", "#a78bfa", "#fb923c",
+  "#facc15", "#4ade80", "#f87171", "#60a5fa", "#c084fc",
+];
+
+function generateBoxPlotSvg(
+  boxPlotData: { gene: string; min: number; q1: number; median: number; q3: number; max: number; n: number }[],
+  options: { width?: number; height?: number; darkMode?: boolean } = {}
+): string {
+  const { width = 600, height = 280, darkMode = true } = options;
+  if (boxPlotData.length === 0) return "";
+
+  const margin = { top: 20, right: 20, bottom: 50, left: 55 };
+  const plotW = width - margin.left - margin.right;
+  const plotH = height - margin.top - margin.bottom;
+
+  const allVals = boxPlotData.flatMap(d => [d.min, d.max]);
+  const dataMin = Math.min(...allVals);
+  const dataMax = Math.max(...allVals);
+  const pad = (dataMax - dataMin) * 0.1 || 1;
+  const yMin = dataMin - pad;
+  const yMax = dataMax + pad;
+
+  const scaleY = (v: number) => margin.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+  const bandW = plotW / boxPlotData.length;
+
+  const textColor = darkMode ? "#f1f5f9" : "#1e293b";
+  const mutedColor = darkMode ? "#94a3b8" : "#64748b";
+  const gridColor = darkMode ? "#334155" : "#e2e8f0";
+  const bgColor = darkMode ? "#1e293b" : "#ffffff";
+
+  const tickCount = 5;
+  const ticks: number[] = [];
+  for (let i = 0; i <= tickCount; i++) {
+    ticks.push(yMin + (yMax - yMin) * (i / tickCount));
+  }
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" style="background:${bgColor};border-radius:6px;">`;
+
+  ticks.forEach(t => {
+    const ty = scaleY(t);
+    svg += `<line x1="${margin.left}" y1="${ty}" x2="${width - margin.right}" y2="${ty}" stroke="${gridColor}" stroke-dasharray="3,3"/>`;
+    svg += `<text x="${margin.left - 8}" y="${ty + 3}" text-anchor="end" fill="${mutedColor}" font-size="10" font-family="sans-serif">${t.toFixed(1)}</text>`;
+  });
+
+  svg += `<text x="14" y="${margin.top + plotH / 2}" text-anchor="middle" fill="${mutedColor}" font-size="11" font-family="sans-serif" transform="rotate(-90,14,${margin.top + plotH / 2})">Expression (log2)</text>`;
+
+  boxPlotData.forEach((d, i) => {
+    const cx = margin.left + bandW * i + bandW / 2;
+    const bw = Math.min(bandW * 0.6, 50);
+    const color = BOXPLOT_COLORS[i % BOXPLOT_COLORS.length];
+
+    const yMinW = scaleY(d.min);
+    const yMaxW = scaleY(d.max);
+    const yQ1 = scaleY(d.q1);
+    const yQ3 = scaleY(d.q3);
+    const yMed = scaleY(d.median);
+
+    svg += `<line x1="${cx}" y1="${yMinW}" x2="${cx}" y2="${yMaxW}" stroke="${textColor}" stroke-width="1.5"/>`;
+    svg += `<line x1="${cx - bw / 4}" y1="${yMinW}" x2="${cx + bw / 4}" y2="${yMinW}" stroke="${textColor}" stroke-width="1.5"/>`;
+    svg += `<line x1="${cx - bw / 4}" y1="${yMaxW}" x2="${cx + bw / 4}" y2="${yMaxW}" stroke="${textColor}" stroke-width="1.5"/>`;
+    const boxTop = Math.min(yQ1, yQ3);
+    const boxH = Math.abs(yQ1 - yQ3);
+    svg += `<rect x="${cx - bw / 2}" y="${boxTop}" width="${bw}" height="${boxH}" fill="${color}" fill-opacity="0.7" stroke="${color}" stroke-width="2" rx="2"/>`;
+    svg += `<line x1="${cx - bw / 2}" y1="${yMed}" x2="${cx + bw / 2}" y2="${yMed}" stroke="${textColor}" stroke-width="2"/>`;
+    const labelAngle = boxPlotData.length > 8 ? ` transform="rotate(-45,${cx},${height - margin.bottom + 14})" text-anchor="end"` : ` text-anchor="middle"`;
+    svg += `<text x="${cx}" y="${height - margin.bottom + 16}" fill="${textColor}" font-size="11" font-family="monospace"${labelAngle}>${d.gene}</text>`;
+    svg += `<text x="${cx}" y="${height - 4}" fill="${mutedColor}" font-size="9" font-family="sans-serif" text-anchor="middle">n=${d.n}</text>`;
+  });
+
+  svg += `</svg>`;
+  return svg;
+}
+
+function drawBoxPlotOnPdf(
+  pdf: jsPDF,
+  boxPlotData: { gene: string; min: number; q1: number; median: number; q3: number; max: number; n: number }[],
+  startX: number,
+  startY: number,
+  chartWidth: number,
+  chartHeight: number,
+  accentColor: [number, number, number] = [56, 189, 248]
+): number {
+  if (boxPlotData.length === 0) return startY;
+
+  const margin = { top: 10, right: 10, bottom: 25, left: 30 };
+  const plotW = chartWidth - margin.left - margin.right;
+  const plotH = chartHeight - margin.top - margin.bottom;
+
+  const allVals = boxPlotData.flatMap(d => [d.min, d.max]);
+  const dataMin = Math.min(...allVals);
+  const dataMax = Math.max(...allVals);
+  const pad = (dataMax - dataMin) * 0.1 || 1;
+  const yMin = dataMin - pad;
+  const yMax = dataMax + pad;
+
+  const scaleY = (v: number) => startY + margin.top + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+  const bandW = plotW / boxPlotData.length;
+  const ox = startX + margin.left;
+
+  // Border
+  pdf.setDrawColor(200, 200, 200);
+  pdf.rect(startX, startY, chartWidth, chartHeight);
+
+  // Grid + Y ticks
+  pdf.setFontSize(7);
+  pdf.setTextColor(120, 120, 120);
+  for (let i = 0; i <= 4; i++) {
+    const val = yMin + (yMax - yMin) * (i / 4);
+    const ty = scaleY(val);
+    pdf.setDrawColor(230, 230, 230);
+    pdf.line(ox, ty, startX + chartWidth - margin.right, ty);
+    pdf.text(val.toFixed(1), ox - 3, ty + 1, { align: "right" });
+  }
+
+  // Y label
+  pdf.setFontSize(8);
+  pdf.text("Expression (log2)", startX + 2, startY + margin.top + plotH / 2, { angle: 90 });
+
+  // Boxes
+  const pdfColors: [number, number, number][] = [
+    [56, 189, 248], [244, 114, 182], [52, 211, 153], [167, 139, 250], [251, 146, 60],
+    [250, 204, 21], [74, 222, 128], [248, 113, 113], [96, 165, 250], [192, 132, 252],
+  ];
+
+  boxPlotData.forEach((d, i) => {
+    const cx = ox + bandW * i + bandW / 2;
+    const bw = Math.min(bandW * 0.6, 18);
+    const [r, g, b] = pdfColors[i % pdfColors.length];
+
+    const yMinW = scaleY(d.min);
+    const yMaxW = scaleY(d.max);
+    const yQ1 = scaleY(d.q1);
+    const yQ3 = scaleY(d.q3);
+    const yMed = scaleY(d.median);
+
+    // Whiskers
+    pdf.setDrawColor(60, 60, 60);
+    pdf.setLineWidth(0.3);
+    pdf.line(cx, yMinW, cx, yMaxW);
+    pdf.line(cx - bw / 4, yMinW, cx + bw / 4, yMinW);
+    pdf.line(cx - bw / 4, yMaxW, cx + bw / 4, yMaxW);
+
+    // Box
+    const boxTop = Math.min(yQ1, yQ3);
+    const boxH = Math.abs(yQ1 - yQ3);
+    pdf.setFillColor(r, g, b);
+    pdf.setDrawColor(r, g, b);
+    pdf.setLineWidth(0.5);
+    // @ts-ignore
+    pdf.roundedRect(cx - bw / 2, boxTop, bw, boxH, 0.5, 0.5, "FD");
+
+    // Median
+    pdf.setDrawColor(40, 40, 40);
+    pdf.setLineWidth(0.5);
+    pdf.line(cx - bw / 2, yMed, cx + bw / 2, yMed);
+
+    // Gene label
+    pdf.setFontSize(7);
+    pdf.setTextColor(40, 40, 40);
+    const label = d.gene.length > 10 ? d.gene.substring(0, 8) + ".." : d.gene;
+    pdf.text(label, cx, startY + chartHeight - margin.bottom + 8, { align: "center" });
+    pdf.setFontSize(6);
+    pdf.setTextColor(140, 140, 140);
+    pdf.text(`n=${d.n}`, cx, startY + chartHeight - margin.bottom + 13, { align: "center" });
+  });
+
+  return startY + chartHeight;
+}
+
 interface ExportMenuProps {
   chartContainerId: string;
   dataset: ExpressionDataset;
