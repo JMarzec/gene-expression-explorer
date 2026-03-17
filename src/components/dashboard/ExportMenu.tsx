@@ -427,6 +427,49 @@ export function ExportMenu({
       pdf.text(row.n.toString(), x, y);
       y += 6;
     });
+
+    // Gene Box Plot Statistics
+    if (boxPlotData.length > 0) {
+      y += 5;
+      if (y > 220) { pdf.addPage(); y = 20; }
+      
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Gene Box Plot Statistics", 14, y);
+      y += 10;
+
+      pdf.setFontSize(9);
+      const bpHeaders = ["Gene", "Min", "Q1", "Median", "Q3", "Max", "N"];
+      const bpColWidths = [30, 25, 25, 25, 25, 25, 20];
+      x = 14;
+
+      pdf.setFillColor(56, 189, 248);
+      pdf.setTextColor(255, 255, 255);
+      pdf.rect(14, y - 4, pageWidth - 28, 8, "F");
+      bpHeaders.forEach((header, i) => {
+        pdf.text(header, x, y);
+        x += bpColWidths[i];
+      });
+      y += 8;
+
+      pdf.setTextColor(0, 0, 0);
+      boxPlotData.forEach((row, index) => {
+        if (y > 270) { pdf.addPage(); y = 20; }
+        if (index % 2 === 0) {
+          pdf.setFillColor(240, 240, 240);
+          pdf.rect(14, y - 4, pageWidth - 28, 6, "F");
+        }
+        x = 14;
+        pdf.text(row.gene, x, y); x += bpColWidths[0];
+        pdf.text(row.min.toFixed(2), x, y); x += bpColWidths[1];
+        pdf.text(row.q1.toFixed(2), x, y); x += bpColWidths[2];
+        pdf.text(row.median.toFixed(2), x, y); x += bpColWidths[3];
+        pdf.text(row.q3.toFixed(2), x, y); x += bpColWidths[4];
+        pdf.text(row.max.toFixed(2), x, y); x += bpColWidths[5];
+        pdf.text(row.n.toString(), x, y);
+        y += 6;
+      });
+    }
     
     pdf.save(`${dataset.name}-summary-${Date.now()}.pdf`);
     toast.success("PDF report exported successfully");
