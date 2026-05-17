@@ -93,7 +93,7 @@ export function GeneSelector({
                   ${isSelected 
                     ? "bg-primary text-primary-foreground" 
                     : isDisabled
-                      ? "text-muted-foreground/50 cursor-not-allowed"
+                      ? "text-muted-foreground cursor-not-allowed opacity-70"
                       : "hover:bg-muted text-foreground"
                   }
                 `}
