@@ -1,0 +1,7 @@
+# Gene Expression Explorer
+
+> Interactive dashboard for visualizing and comparing gene expression datasets across studies, with box plots, heatmaps, histograms, correlation, differential expression, and volcano plots.
+
+## Pages
+
+- [Dashboard](/): Upload up to four expression datasets, select genes and sample groups, and explore them across multiple chart types. Export reports as HTML or PDF.
