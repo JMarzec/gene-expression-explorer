@@ -101,6 +101,7 @@ export function DatasetManager({
                     size="icon"
                     className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => onRemoveDataset(index)}
+                    aria-label={`Remove dataset ${dataset.name}`}
                   >
                     <X className="h-3 w-3" />
                   </Button>
