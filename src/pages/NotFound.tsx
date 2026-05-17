@@ -6,20 +6,39 @@ const NotFound = () => {
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-    const prevTitle = document.title;
-    const prevDesc = document.querySelector('meta[name="description"]')?.getAttribute("content");
-    document.title = "Page Not Found — Gene Expression Explorer";
-    document
-      .querySelector('meta[name="description"]')
-      ?.setAttribute(
-        "content",
-        "The page you're looking for doesn't exist. Return to the Gene Expression Explorer dashboard."
-      );
+    const pageTitle = "Page Not Found — Gene Expression Explorer";
+    const pageDesc =
+      "The page you're looking for doesn't exist. Return to the Gene Expression Explorer dashboard.";
+
+    const getMeta = (selector: string) => document.querySelector(selector) as HTMLMetaElement | null;
+    const setMeta = (selector: string, value: string) => {
+      const el = getMeta(selector);
+      if (el) el.setAttribute("content", value);
+    };
+
+    const prev = {
+      title: document.title,
+      desc: getMeta('meta[name="description"]')?.getAttribute("content") ?? null,
+      ogTitle: getMeta('meta[property="og:title"]')?.getAttribute("content") ?? null,
+      ogDesc: getMeta('meta[property="og:description"]')?.getAttribute("content") ?? null,
+      twTitle: getMeta('meta[name="twitter:title"]')?.getAttribute("content") ?? null,
+      twDesc: getMeta('meta[name="twitter:description"]')?.getAttribute("content") ?? null,
+    };
+
+    document.title = pageTitle;
+    setMeta('meta[name="description"]', pageDesc);
+    setMeta('meta[property="og:title"]', pageTitle);
+    setMeta('meta[property="og:description"]', pageDesc);
+    setMeta('meta[name="twitter:title"]', pageTitle);
+    setMeta('meta[name="twitter:description"]', pageDesc);
+
     return () => {
-      document.title = prevTitle;
-      if (prevDesc) {
-        document.querySelector('meta[name="description"]')?.setAttribute("content", prevDesc);
-      }
+      document.title = prev.title;
+      if (prev.desc) setMeta('meta[name="description"]', prev.desc);
+      if (prev.ogTitle) setMeta('meta[property="og:title"]', prev.ogTitle);
+      if (prev.ogDesc) setMeta('meta[property="og:description"]', prev.ogDesc);
+      if (prev.twTitle) setMeta('meta[name="twitter:title"]', prev.twTitle);
+      if (prev.twDesc) setMeta('meta[name="twitter:description"]', prev.twDesc);
     };
   }, [location.pathname]);
 
